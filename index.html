@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>BioWatch - Monitor en Vivo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Colores basados en el estilo Login/Dashboard claro */
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --accent: #fbc02d; /* Amarillo BioWatch */
+            --text-dark: #374151;
+            --text-muted: #6b7280;
+            --danger: #ef4444;
+            --success: #10b981;
+            --primary-blue: #3498db;
+        }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text-dark); 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh;
+        }
+
+        header {
+            background: white; 
+            padding: 15px 30px;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-bottom: 4px solid var(--accent);
+        }
+
+        .btn-back { 
+            background: var(--text-dark); 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 50px; 
+            cursor: pointer; 
+            font-weight: 600;
+            transition: 0.3s;
+            font-size: 0.85rem;
+        }
+
+        .btn-back:hover { 
+            background: #000; 
+            transform: translateX(-5px); 
+        }
+
+        .main-container { 
+            display: flex; 
+            flex: 1; 
+            padding: 25px; 
+            gap: 25px; 
+            overflow: hidden; 
+        }
+
+        /* --- SECCIÓN DE VIDEO --- */
+        .camera-section {
+            flex: 2; 
+            background: #000; 
+            border-radius: 20px; 
+            overflow: hidden;
+            border: 6px solid white; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            position: relative;
+        }
+
+        .camera-section img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        .live-tag {
+            position: absolute; 
+            top: 15px; 
+            left: 15px; 
+            background: rgba(239, 68, 68, 0.9); 
+            color: white; 
+            padding: 5px 12px; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            font-size: 0.75rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse { 0% {opacity: 1;} 50% {opacity: 0.6;} 100% {opacity: 1;} }
+
+        /* --- SECCIÓN DE INFO --- */
+        .info-section { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+        }
+
+        .card { 
+            background: var(--card); 
+            padding: 22px; 
+            border-radius: 18px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+            border-left: 5px solid var(--accent);
+        }
+
+        .card h3 { 
+            margin: 0 0 15px 0; 
+            font-size: 0.85rem; 
+            color: var(--text-muted); 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+
+        .status-badge { 
+            font-size: 1.2rem; 
+            font-weight: 800; 
+            padding: 12px; 
+            text-align: center; 
+            border-radius: 12px; 
+            margin-top: 10px; 
+            transition: 0.3s;
+        }
+
+        .normal { 
+            background: #f0fdf4; 
+            color: var(--success); 
+            border: 1px solid #dcfce7;
+        }
+
+        .fatiga { 
+            background: var(--danger); 
+            color: white; 
+            animation: blink-red 0.8s infinite; 
+        }
+
+        @keyframes blink-red { 0% {opacity: 1;} 50% {opacity: 0.8;} 100% {opacity: 1;} }
+
+        #historial {
+            font-size: 0.85rem; 
+            overflow-y: auto; 
+            max-height: 200px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        #reloj {
+            font-weight: 600;
+            color: var(--text-dark);
+            background: #eee;
+            padding: 5px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <button class="btn-back" onclick="window.location.href='dashboard.html'">← VOLVER AL PANEL</button>
+            <h2 style="margin:0; font-size: 1.3rem;">BIOWATCH <span style="font-weight:300; color: var(--text-muted); font-size: 1rem;">| Monitor Crítico</span></h2>
+        </div>
+        <div id="reloj">--:--:--</div>
+    </header>
+
+    <div class="main-container">
+        <div class="camera-section">
+            <img id="video-feed" src="http://192.168.1.68:8080/video" alt="Cargando señal de video...">
+            <div class="live-tag">REC ● LIVE</div>
+        </div>
+
+        <div class="info-section">
+            <div class="card">
+                <h3>DATOS DEL OPERADOR</h3>
+                <p style="margin: 8px 0;"><strong>Nombre:</strong> <span id="op-nombre" style="color: var(--text-muted);">Cargando...</span></p>
+                <p style="margin: 8px 0;"><strong>Unidad:</strong> <span id="op-unidad" style="color: var(--text-muted);">Cargando...</span></p>
+                <p style="margin: 8px 0;"><strong>ID:</strong> <span id="op-id" style="color: var(--text-muted);">--</span></p>
+            </div>
+
+            <div class="card" id="card-alerta">
+                <h3>ESTADO BIOMÉTRICO</h3>
+                <div id="status-text" class="status-badge normal">CONECTANDO...</div>
+                <p style="margin-top:15px; font-weight: 600;">Indicador EAR: <span id="ear-val" style="color: var(--primary-blue); font-size: 1.1rem;">0.00</span></p>
+            </div>
+
+            <div class="card" style="flex:1; display: flex; flex-direction: column;">
+                <h3>REGISTRO DE INCIDENCIAS</h3>
+                <div id="historial"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Obtener el ID del operador desde la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const choferId = urlParams.get('id');
+
+        async function initMonitor() {
+            try {
+                // 2. Traer los datos iniciales del chofer
+                const res = await fetch(`http://127.0.0.1:8000/status/${choferId}`);
+                const data = await res.json();
+                
+                document.getElementById('op-nombre').innerText = data.nombre;
+                document.getElementById('op-unidad').innerText = data.unidad;
+                document.getElementById('op-id').innerText = data.id;
+                document.getElementById('video-feed').src = data.url_stream; 
+            } catch (e) { console.error("Error al inicializar"); }
+        }
+
+        async function updateLiveStatus() {
+            try {
+                const res = await fetch(`http://127.0.0.1:8000/status/${choferId}`);
+                const data = await res.json();
+                
+                const badge = document.getElementById('status-text');
+                const earSpan = document.getElementById('ear-val');
+                
+                if (data.estado === 'Fatiga') {
+                    badge.innerText = "¡ALERTA DE FATIGA!";
+                    badge.className = "status-badge fatiga";
+                    document.getElementById('card-alerta').style.borderColor = "red";
+                    const h = document.getElementById('historial');
+                    h.innerHTML = `<div style="border-bottom: 1px solid #eee; padding: 4px 0;">[${new Date().toLocaleTimeString()}] Alerta en Unidad ${data.unidad}</div>` + h.innerHTML;
+                } else {
+                    badge.innerText = "ESTADO: DESPIERTO";
+                    badge.className = "status-badge normal";
+                    //document.getElementById('card-alerta').style.borderColor = "#fbc02d"; // Amarillo BioWatch
+                }
+            } catch (e) { }
+        }
+
+        initMonitor();
+        setInterval(updateLiveStatus, 1000); 
+        setInterval(() => { document.getElementById('reloj').innerText = new Date().toLocaleTimeString(); }, 1000);
+    </script>
+</body>
+</html>

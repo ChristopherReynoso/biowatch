@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioWatch - Acceso Corporativo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-yellow: #fbc02d; /* El amarillo vibrante del botón */
+            --primary-yellow-hover: #f9a825;
+            --text-dark: #374151; /* Color de los textos principales */
+            --text-muted: #9ca3af; /* Color de los placeholders y textos secundarios */
+            --input-bg: #ffffff;
+            --main-bg: #f3f4f6; /* Color de fondo del lado derecho */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #e5e7eb; /* Fondo suave detrás de todo */
+        }
+
+        /* Contenedor principal que divide la pantalla en dos */
+        .main-container {
+            display: flex;
+            width: 1000px; /* Ancho máximo para que se vea como una tarjeta central */
+            height: 600px; /* Alto fijo */
+            background-color: var(--main-bg);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            overflow: hidden; /* Para que el borde redondeado corte la imagen */
+        }
+
+        /* --- Panel Izquierdo (Imagen de fondo y textos originales) --- */
+        .left-panel {
+            flex: 1.2; /* Un poco más ancho que el derecho */
+            /* IMPORTANTE: Aquí se carga tu imagen 'fondo.jpg' */
+            background-image: url('fondo1.png'); 
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            color: white;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Textos arriba */
+        }
+
+        /* Overlay oscuro sutil para que los textos blancos se lean bien sobre cualquier imagen */
+        .left-panel::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.3); /* Ajusta la opacidad (0.3) según necesites */
+            z-index: 1;
+        }
+
+        .left-panel-content {
+            position: relative;
+            z-index: 2; /* Por encima del overlay */
+        }
+
+        .left-panel h1 {
+            font-size: 3rem;
+            margin: 0;
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+
+        .left-panel p {
+            font-size: 1.2rem;
+            margin: 10px 0 0 0;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+
+
+        /* --- Panel Derecho (Formulario de Login) --- */
+        .right-panel {
+            flex: 1;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-header h2 {
+            margin: 0;
+            color: var(--text-dark);
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .login-header p {
+            margin: 5px 0 0 0;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .form-container {
+            width: 100%;
+            max-width: 320px; /* Ancho del formulario */
+        }
+
+        /* Estilo para los grupos de input con iconos */
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary-yellow); /* Color amarillo para los iconos */
+            font-size: 1.2rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px 15px 15px 50px; /* Padding extra a la izquierda para el icono */
+            border: none;
+            background-color: var(--input-bg);
+            border-radius: 50px; /* Bordes totalmente redondeados como en la imagen */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Sombra suave interna */
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            box-sizing: border-box;
+            transition: box-shadow 0.3s ease;
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(251, 192, 45, 0.2); /* Brillo amarillo al enfocar */
+        }
+
+        /* Sección de 'Recordarme' */
+        .options-group {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            margin-bottom: 30px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .options-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            accent-color: var(--primary-yellow); /* Color del checkbox al marcarse */
+        }
+
+        /* El botón amarillo grande */
+        .login-button {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-yellow);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(251, 192, 45, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .login-button:hover {
+            background-color: var(--primary-yellow-hover);
+            box-shadow: 0 6px 10px rgba(251, 192, 45, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .login-button:active {
+            transform: translateY(1px);
+        }
+
+        /* Enlaces secundarios */
+        .secondary-links {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .secondary-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .secondary-links a:hover {
+            color: var(--text-dark);
+        }
+
+        .signup-link {
+            margin-top: 50px; /* Espacio extra abajo */
+        }
+
+        .signup-link a {
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        /* Mensaje de error (adaptado de tu código original) */
+        #error {
+            color: #ef4444;
+            font-size: 0.8rem;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="left-panel-content">
+                <h1>BIOWATCH</h1>
+                <p>Logística y Seguridad</p>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="login-header">
+                <h2>Inicia sesión</h2>
+                <p>en tu cuenta corporativa</p>
+            </div>
+
+            <div class="form-container">
+                <div class="input-group">
+                    <span class="input-icon">&#128100;</span> <input type="text" id="user" placeholder="Usuario de Empresa">
+                </div>
+
+                <div class="input-group">
+                    <span class="input-icon">&#128274;</span> <input type="password" id="pass" placeholder="Contraseña">
+                </div>
+
+                <div class="options-group">
+                    <input type="checkbox" id="remember">
+                    <label for="remember">Recordarme</label>
+                </div>
+
+                <button class="login-button" onclick="login()">INGRESAR</button>
+
+                <p id="error">Credenciales incorrectas</p>
+
+                <div class="secondary-links">
+                    <a href="#">¿Olvidaste tu contraseña?</a>
+                </div>
+
+                <div class="secondary-links signup-link">
+                    ¿Eres nuevo? <a href="#">Regístrate</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mantenemos exactamente la misma lógica funcional que tenías
+        function login() {
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+            
+            if(u === "admin" && p === "1234") {
+                window.location.href = "dashboard.html";
+            } else {
+                document.getElementById('error').style.display = "block";
+            }
+        }
+    </script>
+</body>
+</html>

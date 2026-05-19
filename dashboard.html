@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>BioWatch - Panel de Flota</title>
+    <style>
+    :root {
+        --bg: #f8fafc; /* Gris muy claro, más limpio */
+        --card: #ffffff;
+        --accent: #fbc02d; /* El amarillo de tu login */
+        --text-main: #1e293b;
+        --text-sub: #64748b;
+        --danger: #ef4444;
+        --success: #10b981;
+    }
+
+    body {
+        font-family: 'Poppins', 'Segoe UI', sans-serif;
+        background-color: var(--bg);
+        color: var(--text-main);
+        margin: 0; padding: 30px;
+    }
+
+    /* --- ENCABEZADO CON ANIMACIÓN --- */
+    header {
+        position: relative;
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center;
+        padding-bottom: 20px; 
+        margin-bottom: 40px;
+    }
+
+    /* La línea del encabezado */
+    header::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: #e2e8f0; /* Línea sutil */
+    }
+
+/* El camión animado - CORREGIDO */
+.truck-container {
+    position: absolute;
+    bottom: -12px; 
+    left: -50px;
+    font-size: 24px;
+    animation: drive 12s linear infinite;
+    z-index: 10;
+    /* Volteamos el camión para que no vaya de reversa */
+    transform: scaleX(-1); 
+}
+
+@keyframes drive {
+    0% { 
+        left: -50px; 
+        transform: scaleX(-1); /* Mantiene la dirección al inicio */
+    }
+    100% { 
+        left: 100%; 
+        transform: scaleX(-1); /* Mantiene la dirección al final */
+    }
+}
+
+    /* --- TARJETAS DE OPERADORES --- */
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+    }
+
+    .operator-card {
+        background: var(--card);
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); /* Sombra suave profesional */
+        border: 2px solid transparent;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .operator-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 35px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Estados visuales dinámicos */
+    .card-normal { border-color: #f1f5f9; }
+    
+    .card-fatiga { 
+        border-color: var(--danger); 
+        background: #fff1f2;
+        animation: pulse-red 1.5s infinite;
+    }
+
+    @keyframes pulse-red {
+        0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    .photo-placeholder {
+        width: 85px; height: 85px;
+        background: #f1f5f9; 
+        border-radius: 50%;
+        margin: 0 auto 15px; 
+        border: 3px solid var(--accent);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2rem;
+    }
+
+    .status-dot {
+        height: 12px; width: 12px; border-radius: 50%;
+        display: inline-block; margin-right: 8px;
+    }
+
+    .btn-monitor {
+        background: var(--accent); 
+        color: var(--text-main); 
+        border: none;
+        padding: 12px; 
+        border-radius: 50px; 
+        width: 100%;
+        margin-top: 20px; 
+        cursor: pointer; 
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        transition: 0.3s;
+    }
+
+    .btn-monitor:hover {
+        background: #f9a825;
+        letter-spacing: 1px;
+    }
+
+    .btn-add {
+        background: var(--text-main); 
+        color: white; 
+        border: none; 
+        padding: 12px 25px; 
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    
+    .btn-add:hover {
+        background: #000;
+        transform: scale(1.05);
+    }
+</style>
+</head>
+<body>
+    <header>
+        <h1 style="margin:0; font-weight: 700; letter-spacing: -1px;">BIOWATCH <span style="font-weight: 300; color: var(--text-sub); font-size: 1.4rem;">| Panel de Flota</span></h1>
+        <button class="btn-add">+ Agregar Operador</button>
+        
+        <div class="truck-container">🚚</div>
+    </header>
+
+    <div id="fleet-grid" class="grid-container">
+        <!-- Las tarjetas se cargarán aquí dinámicamente -->
+    </div>
+
+    <script>
+        async function loadDashboard() {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/status_general');
+                const operadores = await response.json();
+                const grid = document.getElementById('fleet-grid');
+                grid.innerHTML = ''; // Limpiar para actualizar
+
+                operadores.forEach(op => {
+                    const isFatiga = op.estado === 'Fatiga';
+                    const cardClass = isFatiga ? 'card-fatiga' : 'card-normal';
+                    
+                    grid.innerHTML += `
+                        <div class="operator-card ${cardClass}" onclick="window.location.href='index.html?id=${op.id}'">
+                            <div class="photo-placeholder"></div>
+                            <h2 style="margin:0;">${op.nombre}</h2>
+                            <p style="color:#bdc3c7; margin:5px 0;">Unidad: ${op.unidad}</p>
+                            <div style="margin-top:10px;">
+                                <span class="status-dot" style="background: ${isFatiga ? 'red' : '#2ecc71'}"></span>
+                                <strong>ESTADO: ${op.estado.toUpperCase()}</strong>
+                            </div>
+                            <button class="btn-monitor">VER MONITOREO EN VIVO</button>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error("Error conectando con BioWatch API");
+            }
+        }
+
+        // Actualización constante (cada 1 segundo) para detectar fatiga al instante[cite: 3]
+        setInterval(loadDashboard, 1000);
+        loadDashboard();
+    </script>
+</body>
+</html>
