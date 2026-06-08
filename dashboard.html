@@ -5,9 +5,9 @@
     <title>BioWatch - Panel de Flota</title>
     <style>
     :root {
-        --bg: #f8fafc; /* Gris muy claro, más limpio */
+        --bg: #f8fafc;
         --card: #ffffff;
-        --accent: #fbc02d; /* El amarillo de tu login */
+        --accent: #fbc02d;
         --text-main: #1e293b;
         --text-sub: #64748b;
         --danger: #ef4444;
@@ -21,7 +21,6 @@
         margin: 0; padding: 30px;
     }
 
-    /* --- ENCABEZADO CON ANIMACIÓN --- */
     header {
         position: relative;
         display: flex; 
@@ -31,7 +30,6 @@
         margin-bottom: 40px;
     }
 
-    /* La línea del encabezado */
     header::after {
         content: "";
         position: absolute;
@@ -39,33 +37,24 @@
         left: 0;
         width: 100%;
         height: 2px;
-        background: #e2e8f0; /* Línea sutil */
+        background: #e2e8f0;
     }
 
-/* El camión animado - CORREGIDO */
-.truck-container {
-    position: absolute;
-    bottom: -12px; 
-    left: -50px;
-    font-size: 24px;
-    animation: drive 12s linear infinite;
-    z-index: 10;
-    /* Volteamos el camión para que no vaya de reversa */
-    transform: scaleX(-1); 
-}
-
-@keyframes drive {
-    0% { 
-        left: -50px; 
-        transform: scaleX(-1); /* Mantiene la dirección al inicio */
+    .truck-container {
+        position: absolute;
+        bottom: -12px; 
+        left: -50px;
+        font-size: 24px;
+        animation: drive 12s linear infinite;
+        z-index: 10;
+        transform: scaleX(-1); 
     }
-    100% { 
-        left: 100%; 
-        transform: scaleX(-1); /* Mantiene la dirección al final */
-    }
-}
 
-    /* --- TARJETAS DE OPERADORES --- */
+    @keyframes drive {
+        0% { left: -50px; transform: scaleX(-1); }
+        100% { left: 100%; transform: scaleX(-1); }
+    }
+
     .grid-container {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -76,7 +65,7 @@
         background: var(--card);
         border-radius: 20px;
         padding: 25px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); /* Sombra suave profesional */
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
         border: 2px solid transparent;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
@@ -88,8 +77,7 @@
         box-shadow: 0 20px 35px rgba(0, 0, 0, 0.1);
     }
 
-    /* Estados visuales dinámicos */
-    .card-normal { border-color: #f1f5f9; }
+    .card-normal { border-color: #f1f5f9; background: var(--card); }
     
     .card-fatiga { 
         border-color: var(--danger); 
@@ -139,65 +127,511 @@
     }
 
     .btn-add {
-        background: var(--text-main); 
-        color: white; 
-        border: none; 
-        padding: 12px 25px; 
+        background: var(--text-main);
+        color: white;
+        border: none;
+        padding: 12px 28px;
         border-radius: 50px;
         font-weight: 600;
+        font-family: 'Poppins', 'Segoe UI', sans-serif;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
         cursor: pointer;
+        box-shadow: 0 4px 12px rgba(30, 41, 59, 0.25);
         transition: 0.3s;
     }
-    
+
     .btn-add:hover {
         background: #000;
-        transform: scale(1.05);
+        letter-spacing: 1px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
     }
+
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(5px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        padding: 20px;
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    .modal {
+        background: #fff;
+        border-radius: 22px;
+        width: 540px;
+        max-width: 95vw;
+        max-height: 92vh;
+        overflow-y: auto;
+        padding: 42px 46px 38px;
+        box-shadow: 0 32px 64px rgba(0, 0, 0, 0.2);
+        position: relative;
+        transform: translateY(24px) scale(0.97);
+        transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+        opacity: 0;
+        scrollbar-width: thin;
+        scrollbar-color: #e2e8f0 transparent;
+    }
+
+    .modal::-webkit-scrollbar { width: 5px; }
+    .modal::-webkit-scrollbar-track { background: transparent; }
+    .modal::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+
+    .modal-overlay.active .modal {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+
+    .modal::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, var(--accent), #f9a825);
+        border-radius: 22px 22px 0 0;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 18px; right: 22px;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #94a3b8;
+        cursor: pointer;
+        line-height: 1;
+        transition: color 0.2s;
+    }
+
+    .modal-close:hover { color: var(--text-main); }
+
+    .modal-header { margin-bottom: 28px; }
+    .modal-header h2 { margin: 0 0 4px; font-size: 1.55rem; font-weight: 700; color: var(--text-main); }
+    .modal-header p  { margin: 0; font-size: 0.88rem; color: var(--text-sub); }
+
+    .modal-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+
+    .modal-grid .full-width { grid-column: 1 / -1; }
+
+    .field-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 7px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .modal input[type="text"],
+    .modal input[type="number"] {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-family: 'Poppins', 'Segoe UI', sans-serif;
+        color: var(--text-main);
+        background: #f8fafc;
+        box-sizing: border-box;
+        transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+    }
+
+    .modal input:focus {
+        outline: none;
+        border-color: rgba(251, 192, 45, 0.7);
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(251, 192, 45, 0.12);
+    }
+
+    .photo-upload-zone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 14px;
+        padding: 22px 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.3s, background 0.3s;
+        background: #f8fafc;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .photo-upload-zone:hover,
+    .photo-upload-zone.drag-over {
+        border-color: var(--accent);
+        background: #fffbeb;
+    }
+
+    .photo-upload-zone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: none;
+        background: none;
+        box-shadow: none;
+    }
+
+    .photo-upload-zone input[type="file"]:focus {
+        box-shadow: none;
+        border: none;
+    }
+
+    .photo-preview {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--accent);
+        margin: 0 auto 10px;
+        display: none;
+    }
+
+    .upload-icon { font-size: 2rem; margin-bottom: 6px; }
+    .upload-text { font-size: 0.82rem; color: var(--text-sub); }
+    .upload-text strong { color: var(--text-main); }
+
+    .modal-divider {
+        height: 1px;
+        background: #f1f5f9;
+        margin: 22px 0;
+    }
+
+    .btn-modal-submit {
+        width: 100%;
+        padding: 14px;
+        background: var(--text-main);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        font-weight: 700;
+        font-family: 'Poppins', 'Segoe UI', sans-serif;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        box-shadow: 0 4px 14px rgba(30, 41, 59, 0.25);
+        transition: all 0.3s ease;
+    }
+
+    .btn-modal-submit:hover {
+        background: #000;
+        letter-spacing: 1.5px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        transform: translateY(-1px);
+    }
+
+    .btn-modal-submit:active { transform: translateY(1px); }
+
+    .btn-modal-submit:disabled {
+        background: #94a3b8;
+        box-shadow: none;
+        cursor: not-allowed;
+        transform: none;
+        letter-spacing: 1px;
+    }
+
+    .btn-spinner {
+        display: inline-block;
+        width: 15px; height: 15px;
+        border: 2px solid rgba(255,255,255,0.35);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        vertical-align: middle;
+        margin-right: 8px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .modal-msg {
+        font-size: 0.8rem;
+        text-align: center;
+        margin-top: 12px;
+        min-height: 18px;
+        display: none;
+        font-family: 'Poppins', 'Segoe UI', sans-serif;
+    }
+
+    .modal-msg.error   { color: #ef4444; display: block; }
+    .modal-msg.success { color: #10b981; display: block; }
 </style>
 </head>
 <body>
     <header>
         <h1 style="margin:0; font-weight: 700; letter-spacing: -1px;">BIOWATCH <span style="font-weight: 300; color: var(--text-sub); font-size: 1.4rem;">| Panel de Flota</span></h1>
-        <button class="btn-add">+ Agregar Operador</button>
-        
+        <button class="btn-add" onclick="openAddModal()">+ Agregar Operador</button>
         <div class="truck-container">🚚</div>
     </header>
 
-    <div id="fleet-grid" class="grid-container">
-        <!-- Las tarjetas se cargarán aquí dinámicamente -->
+    <div id="fleet-grid" class="grid-container"></div>
+
+    <div class="modal-overlay" id="addOperatorModal" onclick="closeOnOverlay(event)">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
+            <button class="modal-close" onclick="closeAddModal()" aria-label="Cerrar">&times;</button>
+
+            <div class="modal-header">
+                <h2 id="addModalTitle">Nuevo Operador</h2>
+                <p>Completa los datos para registrar al conductor en la flota</p>
+            </div>
+
+            <div class="modal-grid" style="margin-bottom: 14px;">
+                <div class="full-width">
+                    <label class="field-label">Foto del Operador <span style="color:#ef4444;">*</span></label>
+                    <div class="photo-upload-zone" id="uploadZone"
+                         ondragover="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)"
+                         ondrop="handleDrop(event)">
+                        <input type="file" id="op_foto" accept="image/*" onchange="previewPhoto(event)">
+                        <img class="photo-preview" id="photoPreview" src="" alt="Vista previa">
+                        <div id="uploadPrompt">
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-text">
+                                <strong>Arrastra una foto aquí</strong> o haz clic para seleccionar<br>
+                                <span style="font-size:0.75rem;">JPG, PNG, WEBP — máx. 5 MB</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-grid">
+                <div>
+                    <label class="field-label" for="op_nombre">Nombre <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="op_nombre" placeholder="Juan" maxlength="60">
+                </div>
+                <div>
+                    <label class="field-label" for="op_apellido">Apellido <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="op_apellido" placeholder="García" maxlength="60">
+                </div>
+                <div>
+                    <label class="field-label" for="op_id">ID / N° Empleado <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="op_id" placeholder="EMP-001" maxlength="20">
+                </div>
+                <div>
+                    <label class="field-label" for="op_unit">Unidad / Vehículo <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="op_unidad" placeholder="Unidad-07" maxlength="40">
+                </div>
+                <div class="full-width">
+                    <label class="field-label" for="op_stream">URL de Stream de Video</label>
+                    <input type="text" id="op_stream" placeholder="http://192.168.x.x:8080/video" maxlength="200">
+                </div>
+            </div>
+
+            <div class="modal-divider"></div>
+
+            <button class="btn-modal-submit" id="addBtn" onclick="submitOperator()">
+                REGISTRAR OPERADOR
+            </button>
+
+            <div class="modal-msg" id="addMsg"></div>
+        </div>
     </div>
 
     <script>
+        function openAddModal() {
+            document.getElementById('addOperatorModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => document.getElementById('op_nombre').focus(), 360);
+        }
+
+        function closeAddModal() {
+            document.getElementById('addOperatorModal').classList.remove('active');
+            document.body.style.overflow = '';
+            resetAddModal();
+        }
+
+        function closeOnOverlay(e) {
+            if (e.target === document.getElementById('addOperatorModal')) closeAddModal();
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeAddModal();
+        });
+
+        function resetAddModal() {
+            ['op_nombre', 'op_apellido', 'op_id', 'op_unidad', 'op_stream'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('op_foto').value = '';
+            document.getElementById('photoPreview').style.display = 'none';
+            document.getElementById('uploadPrompt').style.display = 'block';
+            document.getElementById('uploadZone').classList.remove('drag-over');
+            const btn = document.getElementById('addBtn');
+            btn.disabled = false;
+            btn.textContent = 'REGISTRAR OPERADOR';
+            const msg = document.getElementById('addMsg');
+            msg.className = 'modal-msg';
+            msg.textContent = '';
+        }
+
+        function previewPhoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                showAddMsg('La imagen no debe superar 5 MB.', 'error');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const preview = document.getElementById('photoPreview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                document.getElementById('uploadPrompt').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('uploadZone').classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            document.getElementById('uploadZone').classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('uploadZone').classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (!file || !file.type.startsWith('image/')) {
+                showAddMsg('Solo se aceptan archivos de imagen.', 'error');
+                return;
+            }
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            document.getElementById('op_foto').files = dt.files;
+            previewPhoto({ target: { files: [file] } });
+        }
+
+        async function submitOperator() {
+            const nombre  = document.getElementById('op_nombre').value.trim();
+            const apellido = document.getElementById('op_apellido').value.trim();
+            const id      = document.getElementById('op_id').value.trim();
+            const unidad  = document.getElementById('op_unidad').value.trim();
+            const stream  = document.getElementById('op_stream').value.trim();
+            const fotoInput = document.getElementById('op_foto');
+            const btn     = document.getElementById('addBtn');
+
+            if (!nombre || !apellido || !id || !unidad) {
+                showAddMsg('Completa todos los campos obligatorios.', 'error');
+                return;
+            }
+            if (!fotoInput.files[0]) {
+                showAddMsg('La foto del operador es obligatoria.', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="btn-spinner"></span>Registrando...';
+
+            const formData = new FormData();
+            formData.append('nombre', nombre);
+            formData.append('apellido', apellido);
+            formData.append('id', id);
+            formData.append('unidad', unidad);
+            formData.append('url_stream', stream);
+            formData.append('foto', fotoInput.files[0]);
+
+            try {
+                const res = await fetch('http://127.0.0.1:8000/operadores', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showAddMsg('¡Operador registrado exitosamente!', 'success');
+                    btn.textContent = '✓ Listo';
+                    setTimeout(closeAddModal, 2500);
+                } else {
+                    showAddMsg(data.detail || 'Error al registrar.', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'REGISTRAR OPERADOR';
+                }
+            } catch (err) {
+                showAddMsg('Error de conexión con el servidor.', 'error');
+                btn.disabled = false;
+                btn.textContent = 'REGISTRAR OPERADOR';
+            }
+        }
+
+        function showAddMsg(text, type) {
+            const el = document.getElementById('addMsg');
+            el.textContent = text;
+            el.className = `modal-msg ${type}`;
+        }
+
         async function loadDashboard() {
             try {
                 const response = await fetch('http://127.0.0.1:8000/status_general');
                 const operadores = await response.json();
                 const grid = document.getElementById('fleet-grid');
-                grid.innerHTML = ''; // Limpiar para actualizar
 
                 operadores.forEach(op => {
                     const isFatiga = op.estado === 'Fatiga';
                     const cardClass = isFatiga ? 'card-fatiga' : 'card-normal';
+                    const statusText = `ESTADO: ${op.estado.toUpperCase()}`;
+                    const dotColor = isFatiga ? 'red' : '#2ecc71';
                     
-                    grid.innerHTML += `
-                        <div class="operator-card ${cardClass}" onclick="window.location.href='index.html?id=${op.id}'">
+                    let card = document.getElementById(`card-${op.id}`);
+
+                    if (!card) {
+                        card = document.createElement('div');
+                        card.id = `card-${op.id}`;
+                        card.className = `operator-card ${cardClass}`;
+                        card.onclick = () => { window.location.href = `index.html?id=${op.id}`; };
+                        
+                        card.innerHTML = `
                             <div class="photo-placeholder"></div>
                             <h2 style="margin:0;">${op.nombre}</h2>
                             <p style="color:#bdc3c7; margin:5px 0;">Unidad: ${op.unidad}</p>
                             <div style="margin-top:10px;">
-                                <span class="status-dot" style="background: ${isFatiga ? 'red' : '#2ecc71'}"></span>
-                                <strong>ESTADO: ${op.estado.toUpperCase()}</strong>
+                                <span class="status-dot" style="background: ${dotColor}"></span>
+                                <strong class="status-lbl">${statusText}</strong>
                             </div>
                             <button class="btn-monitor">VER MONITOREO EN VIVO</button>
-                        </div>
-                    `;
+                        `;
+                        grid.appendChild(card);
+                    } else {
+                        if (!card.classList.contains(cardClass)) {
+                            card.className = `operator-card ${cardClass}`;
+                            card.querySelector('.status-dot').style.background = dotColor;
+                            card.querySelector('.status-lbl').innerText = statusText;
+                        }
+                    }
                 });
+
+                Array.from(grid.children).forEach(card => {
+                    const id = card.id.replace('card-', '');
+                    if (!operadores.some(op => op.id === id)) {
+                        card.remove();
+                    }
+                });
+
             } catch (error) {
                 console.error("Error conectando con BioWatch API");
             }
         }
 
-        // Actualización constante (cada 1 segundo) para detectar fatiga al instante[cite: 3]
         setInterval(loadDashboard, 1000);
         loadDashboard();
     </script>

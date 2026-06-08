@@ -6,10 +6,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Colores basados en el estilo Login/Dashboard claro */
             --bg: #f3f4f6;
             --card: #ffffff;
-            --accent: #fbc02d; /* Amarillo BioWatch */
+            --accent: #fbc02d;
             --text-dark: #374151;
             --text-muted: #6b7280;
             --danger: #ef4444;
@@ -62,7 +61,6 @@
             overflow: hidden; 
         }
 
-        /* --- SECCIÓN DE VIDEO --- */
         .camera-section {
             flex: 2; 
             background: #000; 
@@ -97,7 +95,6 @@
 
         @keyframes pulse { 0% {opacity: 1;} 50% {opacity: 0.6;} 100% {opacity: 1;} }
 
-        /* --- SECCIÓN DE INFO --- */
         .info-section { 
             flex: 1; 
             display: flex; 
@@ -174,7 +171,7 @@
 
     <div class="main-container">
         <div class="camera-section">
-            <img id="video-feed" src="http://192.168.1.68:8080/video" alt="Cargando señal de video...">
+            <img id="video-feed" src="" alt="Cargando señal de video...">
             <div class="live-tag">REC ● LIVE</div>
         </div>
 
@@ -200,48 +197,127 @@
     </div>
 
     <script>
-        // 1. Obtener el ID del operador desde la URL
         const urlParams = new URLSearchParams(window.location.search);
-        const choferId = urlParams.get('id');
+        const choferId = urlParams.get('id') || 'CH-006';
 
+        // VARIABLES DE CONTROL DE ESTADO LOCAL (Evitan repaints redundantes)
+        let ultimoEstado = null;
+        let ultimoHistorialHTML = "";
+
+        // 1. Inicialización limpia del Monitor en Vivo
         async function initMonitor() {
             try {
-                // 2. Traer los datos iniciales del chofer
                 const res = await fetch(`http://127.0.0.1:8000/status/${choferId}`);
+                if (!res.ok) return;
                 const data = await res.json();
                 
                 document.getElementById('op-nombre').innerText = data.nombre;
                 document.getElementById('op-unidad').innerText = data.unidad;
                 document.getElementById('op-id').innerText = data.id;
-                document.getElementById('video-feed').src = data.url_stream; 
-            } catch (e) { console.error("Error al inicializar"); }
+                
+                // Forzar origen estático del streaming una única vez para estabilizar la transmisión web
+                document.getElementById('video-feed').src = `http://127.0.0.1:8000/video_feed/${choferId}`;
+                
+                // Arrancar los bucles recursivos asíncronos controlados
+                bucleLiveStatus();
+                bucleHistorial();
+            } catch (e) { 
+                console.error("Error al inicializar el monitor, reintantando en 3 segundos...", e); 
+                setTimeout(initMonitor, 3000);
+            }
         }
 
+        // 2. Consulta y renderizado del historial optimizado
+        async function cargarHistorial() {
+            try {
+                const res = await fetch(`http://127.0.0.1:8000/alertas/${choferId}?limite=50`);
+                if (!res.ok) return;
+                const alertas = await res.json();
+                const h = document.getElementById('historial');
+                
+                if (alertas.length === 0) {
+                    const textoVacio = '<span style="color:#10b981;">Sin incidencias registradas.</span>';
+                    if (ultimoHistorialHTML !== textoVacio) {
+                        ultimoHistorialHTML = textoVacio;
+                        h.innerHTML = textoVacio;
+                    }
+                    return;
+                }
+                
+                const nuevoHTML = alertas.map(a =>
+                    `<div style="border-bottom:1px solid #eee; padding:5px 0;">
+                        <span style="color:#ef4444; font-weight:600;">⚠ FATIGA</span>
+                        &nbsp;[${a.timestamp}]&nbsp;—&nbsp;Unidad ${a.unidad}
+                        &nbsp;<span style="color:#3498db;">EAR: ${a.ear.toFixed(3)}</span>
+                    </div>`
+                ).join('');
+
+                // CONTROL DE ESTADO LOCAL PARA EL HISTORIAL: Solo inyecta si hay registros nuevos
+                if (ultimoHistorialHTML !== nuevoHTML) {
+                    ultimoHistorialHTML = nuevoHTML;
+                    h.innerHTML = nuevoHTML;
+                }
+            } catch (e) { 
+                console.error("Error cargando historial:", e);
+            }
+        }
+
+        // 3. Lectura controlada en tiempo real (Protección anti-parpadeo y anti-saturación)
         async function updateLiveStatus() {
             try {
                 const res = await fetch(`http://127.0.0.1:8000/status/${choferId}`);
+                if (!res.ok) return;
                 const data = await res.json();
                 
                 const badge = document.getElementById('status-text');
                 const earSpan = document.getElementById('ear-val');
-                
-                if (data.estado === 'Fatiga') {
-                    badge.innerText = "¡ALERTA DE FATIGA!";
-                    badge.className = "status-badge fatiga";
-                    document.getElementById('card-alerta').style.borderColor = "red";
-                    const h = document.getElementById('historial');
-                    h.innerHTML = `<div style="border-bottom: 1px solid #eee; padding: 4px 0;">[${new Date().toLocaleTimeString()}] Alerta en Unidad ${data.unidad}</div>` + h.innerHTML;
-                } else {
-                    badge.innerText = "ESTADO: DESPIERTO";
-                    badge.className = "status-badge normal";
-                    //document.getElementById('card-alerta').style.borderColor = "#fbc02d"; // Amarillo BioWatch
+                const cardAlerta = document.getElementById('card-alerta');
+
+                // Renderizado continuo del valor EAR numérico (métrica fluida en tiempo real)
+                if (earSpan) {
+                    earSpan.innerText = (data.ear || 0).toFixed(3);
                 }
-            } catch (e) { }
+                
+                // CONTROL DE ESTADO LOCAL BIOMÉTRICO: Solo altera estilos si el estado cambió de verdad
+                if (data.estado !== ultimoEstado) {
+                    ultimoEstado = data.estado; // Actualizamos nuestra memoria interna
+                    
+                    if (data.estado === 'Fatiga') {
+                        badge.innerText = "¡ALERTA DE FATIGA!";
+                        badge.className = "status-badge fatiga";
+                        if (cardAlerta) cardAlerta.style.borderColor = "red";
+                    } else {
+                        badge.innerText = "ESTADO: DESPIERTO";
+                        badge.className = "status-badge normal";
+                        if (cardAlerta) cardAlerta.style.borderColor = "";
+                    }
+                }
+            } catch (e) { 
+                // Resetea de forma segura el estado local ante una desconexión momentánea de red
+                ultimoEstado = null;
+            }
         }
 
+        // BUCLES ASÍNCRONOS CONTROLADOS (Evitan colisiones de hilos en tu API Python)
+        async function bucleLiveStatus() {
+            await updateLiveStatus();
+            // Programa la siguiente llamada exactamente 1 segundo DESPUÉS de procesar la anterior
+            setTimeout(bucleLiveStatus, 1000);
+        }
+
+        async function bucleHistorial() {
+            await cargarHistorial();
+            // Sincroniza la tabla de alertas 5 segundos DESPUÉS de terminar la carga previa
+            setTimeout(bucleHistorial, 5000);
+        }
+
+        // Inicialización del sistema
         initMonitor();
-        setInterval(updateLiveStatus, 1000); 
-        setInterval(() => { document.getElementById('reloj').innerText = new Date().toLocaleTimeString(); }, 1000);
+        
+        // Reloj local de la cabecera (Operación puramente interna del cliente, no toca red)
+        setInterval(() => { 
+            document.getElementById('reloj').innerText = new Date().toLocaleTimeString(); 
+        }, 1000);
     </script>
 </body>
 </html>
